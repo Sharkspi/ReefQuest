@@ -1,7 +1,3 @@
-Great. I’ll create a professional yet approachable English README file for your GitHub project ReefQuest. It will include a description of the app’s concept and features, highlight its current development status, and provide clear setup instructions for Flutter developers. I’ll also include a section for future improvements and contributions.
-
-I’ll let you know as soon as it’s ready for your review.
-
 # ReefQuest
 
 *The “Eat the Frog” productivity concept suggests tackling your hardest task first each day. ReefQuest is inspired by this idea and gamifies it so that tasks feel like game challenges. Research shows that framing real-life tasks as games makes them more engaging and rewarding. Each morning the app draws one “important” task and one “self-care” task at random, turning your to-dos into a fun daily quest and reinforcing the habit of rewarding yourself.*
