@@ -14,12 +14,19 @@ class DbTaskService extends TaskService {
   DbTaskService();
 
   @override
-  Future<Result<List<Task>>> getImportantTasks() async {
+  Future<Result<List<Task>>> getTasks(TaskType type, {bool? done}) async {
     try {
       await Future.delayed(Duration(milliseconds: 200));
       final db = await _db;
-      final result =
-          await db.query(AppDatabase.tableImportantTask, where: 'done = 0');
+      final List<Map<String, Object?>> result;
+      if (done != null) {
+        result = await db.rawQuery(
+            'SELECT * from ${AppDatabase.tableTask} WHERE taskType = ? AND done = ?',
+            [type.name, done ? 1 : 0]);
+      } else {
+        result = await db.query(AppDatabase.tableTask,
+            where: 'taskType = ?', whereArgs: [type.name]);
+      }
       return Result.ok(result.map((e) => Task.fromMap(e)).toList());
     } on Exception catch (e) {
       return Result.error(e);
@@ -27,131 +34,76 @@ class DbTaskService extends TaskService {
   }
 
   @override
-  Future<Result<List<Task>>> getSelfCareTasks() async {
+  Future<Result<Task?>> getTaskFromId(int id) async {
     try {
       await Future.delayed(Duration(milliseconds: 200));
       final db = await _db;
-      final result =
-          await db.query(AppDatabase.tableSelfCareTask, where: 'done = 0');
-      return Result.ok(result.map((e) => Task.fromMap(e)).toList());
+      final result = await db
+          .query(AppDatabase.tableTask, where: 'id = ?', whereArgs: [id]);
+      List<Task> taskList =
+          result.isNotEmpty ? result.map((c) => Task.fromMap(c)).toList() : [];
+      if (taskList.length > 1) {
+        return Result.error(Exception(
+            'Many tasks with the same id in ${AppDatabase.tableTask} table'));
+      } else if (taskList.isEmpty) {
+        return Result.ok(null);
+      }
+      return Result.ok(taskList[0]);
     } on Exception catch (e) {
       return Result.error(e);
     }
   }
 
   @override
-  Future<Result<Task?>> getTask(int id) {
-    // TODO: implement getTask
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<Result<void>> saveImportantTask(Task task) async {
+  Future<Result<void>> saveTask(Task task) async {
     try {
       await Future.delayed(Duration(milliseconds: 200));
       final db = await _db;
-      await db.insert(AppDatabase.tableImportantTask, task.toMap(),
+      await db.insert(AppDatabase.tableTask, task.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace);
-      _log.fine('Saved task in table ${AppDatabase.tableImportantTask}');
+      _log.fine('Saved task in table ${AppDatabase.tableTask}');
       return Result.ok(null);
     } on Exception catch (e) {
-      _log.warning(
-          'Failed to save task to table ${AppDatabase.tableImportantTask}', e);
+      _log.warning('Failed to save task to table ${AppDatabase.tableTask}', e);
       return Result.error(e);
     }
   }
 
   @override
-  Future<Result<void>> saveSelfCareTask(Task task) async {
-    try {
-      await Future.delayed(Duration(milliseconds: 200));
-      final db = await _db;
-      await db.insert(AppDatabase.tableSelfCareTask, task.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-      _log.fine('Saved task in table ${AppDatabase.tableSelfCareTask}');
-      return Result.ok(null);
-    } on Exception catch (e) {
-      _log.warning(
-          'Failed to save task to table ${AppDatabase.tableSelfCareTask}', e);
-      return Result.error(e);
-    }
-  }
-
-  @override
-  Future<Result<void>> updateImportantTask(Task task) async {
+  Future<Result<void>> updateTask(Task task) async {
     try {
       await Future.delayed(Duration(milliseconds: 200));
       final db = await _db;
       await db.update(
-        AppDatabase.tableImportantTask,
+        AppDatabase.tableTask,
         task.toMap(),
         where: 'id = ?',
         whereArgs: [task.id],
       );
       _log.fine(
-          'Updated task with id : ${task.id} in table ${AppDatabase.tableImportantTask}');
+          'Updated task with id : ${task.id} in table ${AppDatabase.tableTask}');
       return Result.ok(null);
     } on Exception catch (e) {
       _log.warning(
-          'Failed to update task with id : ${task.id} in table ${AppDatabase.tableImportantTask}',
+          'Failed to update task with id : ${task.id} in table ${AppDatabase.tableTask}',
           e);
       return Result.error(e);
     }
   }
 
   @override
-  Future<Result<void>> updateSelfCareTask(Task task) async {
+  Future<Result<void>> deleteTask(Task task) async {
     try {
       await Future.delayed(Duration(milliseconds: 200));
       final db = await _db;
-      await db.update(
-        AppDatabase.tableSelfCareTask,
-        task.toMap(),
-        where: 'id = ?',
-        whereArgs: [task.id],
-      );
+      await db
+          .delete(AppDatabase.tableTask, where: 'id = ?', whereArgs: [task.id]);
       _log.fine(
-          'Updated task with id : ${task.id} in table ${AppDatabase.tableSelfCareTask}');
+          'Deleted task with id : ${task.id} in table ${AppDatabase.tableTask}');
       return Result.ok(null);
     } on Exception catch (e) {
       _log.warning(
-          'Failed to update task with id : ${task.id} in table ${AppDatabase.tableSelfCareTask}',
-          e);
-      return Result.error(e);
-    }
-  }
-
-  @override
-  Future<Result<void>> deleteImportantTask(Task task) async {
-    try {
-      await Future.delayed(Duration(milliseconds: 200));
-      final db = await _db;
-      await db.delete(AppDatabase.tableImportantTask,
-          where: 'id = ?', whereArgs: [task.id]);
-      _log.fine(
-          'Deleted task with id : ${task.id} in table ${AppDatabase.tableImportantTask}');
-      return Result.ok(null);
-    } on Exception catch (e) {
-      _log.warning(
-          'Failed to delete task with id : ${task.id} in table ${AppDatabase.tableImportantTask}',
-          e);
-      return Result.error(e);
-    }
-  }
-
-  @override
-  Future<Result<void>> deleteSelfCareTask(Task task) async {
-    try {
-      await Future.delayed(Duration(milliseconds: 200));
-      final db = await _db;
-      await db.delete(AppDatabase.tableSelfCareTask,
-          where: 'id = ?', whereArgs: [task.id]);
-      _log.fine(
-          'Deleted task with id : ${task.id} in table ${AppDatabase.tableSelfCareTask}');
-      return Result.ok(null);
-    } on Exception catch (e) {
-      _log.warning(
-          'Failed to delete task with id : ${task.id} in table ${AppDatabase.tableSelfCareTask}',
+          'Failed to delete task with id : ${task.id} in table ${AppDatabase.tableTask}',
           e);
       return Result.error(e);
     }

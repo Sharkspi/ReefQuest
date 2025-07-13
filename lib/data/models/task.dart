@@ -3,44 +3,69 @@ class Task {
   static final String titleColumn = 'title';
   static final String descriptionColumn = 'description';
   static final String doneColumn = 'done';
+  static final String taskTypeColumn = 'taskType';
 
   final int? id;
   final String title;
-  final String description;
+  final String? description;
   final bool done;
+  final TaskType taskType;
 
   Task(
       {required this.title,
-      this.description = "No description for this task. Lorem ipsum set dolor amet mess couilles, oui oui oui ta mère la reine des tchoins ca me casse les couilles putehue",
+      this.description,
       this.id,
-      this.done = false});
-
-  Task.id(this.id, this.title,
-      {this.description = "No description for this task. Lorem ipsum set dolor amet mess couilles, oui oui oui ta mère la reine des tchoins ca me casse les couilles putehue", this.done = false});
+      this.done = false,
+      required this.taskType});
 
   Map<String, dynamic> toMap() => {
         idColumn: id,
         titleColumn: title,
         descriptionColumn: description,
-        doneColumn: done ? 1 : 0
+        doneColumn: done ? 1 : 0,
+        taskTypeColumn: taskType.name
       };
 
   factory Task.fromMap(Map<String, dynamic> map) => Task(
       title: map[titleColumn],
       id: map[idColumn],
       description: map[descriptionColumn],
-      done: map[doneColumn] == 1);
+      done: map[doneColumn] == 1,
+      taskType: TaskType.getTypeFromName(map[taskTypeColumn]));
 
-  Task copyWith({int? id, String? title, String? description, bool? done}) {
+  Task copyWith(
+      {int? id,
+      String? title,
+      String? description,
+      bool? done,
+      TaskType? taskType}) {
     return Task(
         id: id ?? this.id,
         title: title ?? this.title,
         description: description ?? this.description,
-        done: done ?? this.done);
+        done: done ?? this.done,
+        taskType: taskType ?? this.taskType);
   }
 
   @override
   String toString() {
-    return 'Task(id, $id, title: $title, description: $description, done: $done';
+    return 'Task(id, $id, title: $title, description: $description, done: $done, taskType: ${taskType.name}';
+  }
+}
+
+enum TaskType {
+  important('important'),
+  selfCare('selfCare');
+
+  final String name;
+
+  const TaskType(this.name);
+
+  static TaskType getTypeFromName(String name) {
+    final cleanName = name.trim().toLowerCase();
+    for (final TaskType type in TaskType.values) {
+      if (type.name.trim().toLowerCase() == cleanName) return type;
+    }
+    throw Exception('Task type not found : $name');
   }
 }

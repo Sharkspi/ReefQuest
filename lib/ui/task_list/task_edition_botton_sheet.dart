@@ -5,9 +5,11 @@ class TaskFormBottomSheet extends StatefulWidget {
   const TaskFormBottomSheet({
     super.key,
     this.initialTask,
+    required this.taskType
   });
 
   final Task? initialTask;
+  final TaskType taskType;
 
   @override
   State<TaskFormBottomSheet> createState() => _TaskFormBottomSheetState();
@@ -36,7 +38,7 @@ class _TaskFormBottomSheetState extends State<TaskFormBottomSheet> {
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
-      final Task task = (widget.initialTask ?? Task(title: '')).copyWith(
+      final Task task = (widget.initialTask ?? Task(title: '', taskType: widget.taskType)).copyWith(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
       );

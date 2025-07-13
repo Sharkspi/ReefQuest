@@ -33,7 +33,6 @@ class _SharedNavigationDrawerState extends State<SharedNavigationDrawer> {
   @override
   Widget build(BuildContext context) {
     final currentLocation = GoRouter.of(context).state.name;
-    debugPrint(currentLocation);
     return NavigationDrawer(
       onDestinationSelected: _handleScreenChange,
       selectedIndex: _getSelectedIndexFromRoute(currentLocation!),

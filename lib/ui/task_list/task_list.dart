@@ -90,7 +90,8 @@ class _TaskListState extends State<TaskList> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => TaskFormBottomSheet(initialTask: task),
+      builder: (_) => TaskFormBottomSheet(
+          initialTask: task, taskType: widget.viewModel.taskType),
     );
 
     if (result == null) return;
@@ -177,7 +178,7 @@ class _Task extends StatelessWidget {
                         Expanded(
                             child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text(task.description),
+                          child: Text(task.description ?? ''),
                         )),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

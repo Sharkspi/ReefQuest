@@ -3,12 +3,11 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class AppDatabase {
-  //Instance privée unique partagée dans l'application
+  //Private instance shared through the app
   static Database? _db;
 
-  //Noms des tables de l'application
-  static final String tableImportantTask = 'important_task';
-  static final String tableSelfCareTask = 'self_care_task';
+  //Table names existing in the database
+  static final String tableTask = 'task';
 
   static Future<Database> get db async {
     if (_db != null) return _db!;
@@ -32,19 +31,12 @@ class AppDatabase {
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''
-          CREATE TABLE $tableImportantTask (
+          CREATE TABLE $tableTask (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             description TEXT, 
-            done INTEGER NOT NULL
-          );
-        ''');
-        await db.execute('''
-          CREATE TABLE $tableSelfCareTask (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            description TEXT, 
-            done INTEGER NOT NULL
+            done INTEGER NOT NULL,
+            taskType TEXT NOT NULL
           );
         ''');
       },
