@@ -3,15 +3,12 @@ import 'package:reefquest/data/services/daily_task_service.dart';
 import 'package:reefquest/utils/result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../models/task.dart';
+
 class SharedPrefDailyTaskService extends DailyTaskService {
   final Logger _log = Logger('$SharedPrefDailyTaskService');
 
-  final _keyImportantId = 'daily_important_task_id';
-  final _keySelfCareId = 'daily_self_care_task_id';
   final _keyLastTaskResetDate = 'daily_task_date';
-
-  final _keyImportantRoll = 'roll_important';
-  final _keySelfCareRoll = 'roll_self_care';
   final _keyLastRollResetDate = 'last_roll_reset';
 
   final SharedPreferencesAsync _prefs = SharedPreferencesAsync();
@@ -19,97 +16,53 @@ class SharedPrefDailyTaskService extends DailyTaskService {
   SharedPrefDailyTaskService();
 
   @override
-  Future<Result<int?>> getImportantRollCount() async {
+  Future<Result<int?>> getTaskOfDayId(TaskType type) async {
     try {
-      final result = await _prefs.getInt(_keyImportantRoll);
-      _log.fine('Important roll count loaded');
+      final result = await _prefs.getInt(_getTaskTypeDailyTaskKey(type));
+      _log.fine('Daily ${type.name} task loaded, id : $result');
       return Result.ok(result);
     } on Exception catch (e) {
-      _log.warning('Failed to retrieve important roll count', e);
+      _log.warning('Failed to retrieve daily ${type.name} task id', e);
       return Result.error(e);
     }
   }
 
   @override
-  Future<Result<int?>> getImportantTaskOfDayId() async {
+  Future<Result<void>> saveTaskOfDayId(TaskType type, int? id) async {
     try {
-      final result = await _prefs.getInt(_keyImportantId);
-      _log.fine('Daily important task id loaded');
+      if (id != null) {
+        await _prefs.setInt(_getTaskTypeDailyTaskKey(type), id);
+      } else {
+        _prefs.remove(_getTaskTypeDailyTaskKey(type));
+      }
+      _log.fine('Saved ${type.name} daily task');
+      return Result.ok(null);
+    } on Exception catch (e) {
+      _log.warning('Failed to save ${type.name} task id', e);
+      return Result.error(e);
+    }
+  }
+
+  @override
+  Future<Result<int?>> getRollCount(TaskType type) async {
+    try {
+      final result = await _prefs.getInt(_getTaskTypeRollCountKey(type));
+      _log.fine('${type.name} roll count loaded');
       return Result.ok(result);
     } on Exception catch (e) {
-      _log.warning('Failed to retrieve daily important task id', e);
+      _log.warning('Failed to retrieve ${type.name} roll count', e);
       return Result.error(e);
     }
   }
 
   @override
-  Future<Result<int?>> getSelfCareRollCount() async {
+  Future<Result<void>> saveRollCount(TaskType type, int count) async {
     try {
-      final result = await _prefs.getInt(_keySelfCareRoll);
-      _log.fine('Self care roll count loaded');
-      return Result.ok(result);
-    } on Exception catch (e) {
-      _log.warning('Failed to retrieve self care roll count', e);
-      return Result.error(e);
-    }
-  }
-
-  @override
-  Future<Result<int?>> getSelfCareTaskOfDayId() async {
-    try {
-      final result = await _prefs.getInt(_keySelfCareId);
-      _log.fine('Daily self care task loaded');
-      return Result.ok(result);
-    } on Exception catch (e) {
-      _log.warning('Failed to retrieve daily self care task id', e);
-      return Result.error(e);
-    }
-  }
-
-  @override
-  Future<Result<void>> saveImportantRollCount(int count) async {
-    try {
-      await _prefs.setInt(_keyImportantRoll, count);
-      _log.fine('Saved important roll count');
+      await _prefs.setInt(_getTaskTypeRollCountKey(type), count);
+      _log.fine('Saved ${type.name} roll count');
       return Result.ok(null);
     } on Exception catch (e) {
-      _log.warning('Failed to save important roll count', e);
-      return Result.error(e);
-    }
-  }
-
-  @override
-  Future<Result<void>> saveImportantTaskOfDayId(int id) async {
-    try {
-      await _prefs.setInt(_keyImportantId, id);
-      _log.fine('Saved important daily task');
-      return Result.ok(null);
-    } on Exception catch (e) {
-      _log.warning('Failed to save important task id', e);
-      return Result.error(e);
-    }
-  }
-
-  @override
-  Future<Result<void>> saveSelfCareRollCount(int count) async {
-    try {
-      await _prefs.setInt(_keySelfCareRoll, count);
-      _log.fine('Saved self care roll count');
-      return Result.ok(null);
-    } on Exception catch (e) {
-      _log.warning('Failed to save self care roll count', e);
-      return Result.error(e);
-    }
-  }
-
-  @override
-  Future<Result<void>> saveSelfCareTaskOfDayId(int id) async {
-    try {
-      await _prefs.setInt(_keySelfCareId, id);
-      _log.fine('Saved self care daily task');
-      return Result.ok(null);
-    } on Exception catch (e) {
-      _log.warning('Failed to save self care task id', e);
+      _log.warning('Failed to save ${type.name} roll count', e);
       return Result.error(e);
     }
   }
@@ -176,5 +129,13 @@ class SharedPrefDailyTaskService extends DailyTaskService {
       _log.warning('Failed to save last daily task reroll date');
       return Result.error(e);
     }
+  }
+
+  String _getTaskTypeDailyTaskKey(TaskType taskType) {
+    return 'daily_${taskType.name}_task_id';
+  }
+
+  String _getTaskTypeRollCountKey(TaskType taskType) {
+    return 'daily_${taskType.name}_roll_count';
   }
 }

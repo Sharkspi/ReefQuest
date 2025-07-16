@@ -1,22 +1,14 @@
+import 'package:reefquest/data/models/task.dart';
 import 'package:reefquest/utils/result.dart';
 
 abstract class DailyTaskService {
+  Future<Result<int?>> getTaskOfDayId(TaskType type);
 
-  Future<Result<int?>> getImportantTaskOfDayId();
+  Future<Result<void>> saveTaskOfDayId(TaskType type, int? id);
 
-  Future<Result<void>> saveImportantTaskOfDayId(int id);
+  Future<Result<int?>> getRollCount(TaskType type);
 
-  Future<Result<int?>> getSelfCareTaskOfDayId();
-
-  Future<Result<void>> saveSelfCareTaskOfDayId(int id);
-
-  Future<Result<void>> saveImportantRollCount(int count);
-
-  Future<Result<int?>> getImportantRollCount();
-
-  Future<Result<void>> saveSelfCareRollCount(int count);
-
-  Future<Result<int?>> getSelfCareRollCount();
+  Future<Result<void>> saveRollCount(TaskType type, int count);
 
   Future<Result<DateTime?>> getLastTaskResetDate();
 

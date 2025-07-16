@@ -43,9 +43,9 @@ class TaskListViewModel extends ChangeNotifier {
       switch (result) {
         case Ok<List<Task>>():
           _tasks = result.value;
-          _log.fine('Loaded tasks');
+          _log.fine('Loaded ${_taskType.name} tasks');
         case Error<List<Task>>():
-          _log.warning('Failed to load tasks', result.error);
+          _log.warning('Failed to load ${_taskType.name} tasks', result.error);
           return result;
       }
       return result;

@@ -2,7 +2,6 @@ import '../../../utils/result.dart';
 import '../../models/task.dart';
 
 abstract class TaskRepository {
-  //NEW IMPLEMENTATIONS
   Future<Result<List<Task>>> getTasks(TaskType type, {bool? done = false});
 
   Future<Result<void>> saveTask(Task task);
@@ -11,23 +10,13 @@ abstract class TaskRepository {
 
   Future<Result<void>> deleteTask(Task task);
 
-  //OLD IMPLEMENTATIONS
+  Future<Result<Task?>> getDailyTask(TaskType type);
 
-  Future<Result<Task?>> getDailyImportantTask();
+  Future<Result<void>> saveDailyTask(Task? task, TaskType type);
 
-  Future<Result<Task?>> getDailySelfCareTask();
+  Future<Result<int>> getRoll(TaskType type);
 
-  Future<Result<void>> saveDailyImportantTask(Task? task);
-
-  Future<Result<void>> saveDailySelfCareTask(Task? task);
-
-  Future<Result<int?>> getImportantRoll();
-
-  Future<Result<int?>> getSelfCareRoll();
-
-  Future<Result<void>> saveImportantRoll(int count);
-
-  Future<Result<void>> saveSelfCareRoll(int count);
+  Future<Result<void>> saveRoll(TaskType type, int count);
 
   Future<Result<DateTime?>> getLastTaskResetDate();
 

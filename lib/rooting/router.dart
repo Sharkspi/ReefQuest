@@ -6,7 +6,6 @@ import 'package:reefquest/ui/daily_tasks/view_models/daily_tasks_view_model.dart
 import 'package:reefquest/ui/shared/shared_menu.dart';
 
 import '../data/models/task.dart';
-import '../ui/daily_tasks/test_background.dart';
 import '../ui/task_list/task_list.dart';
 import '../ui/task_list/view_models/task_list_view_models.dart';
 
@@ -22,7 +21,7 @@ class AppRouter {
             name: Routes.dailyTasksName,
             builder: (context, state) => DailyTasks(
                 viewModel:
-                    DailyTasksViewModel(dailyTasksUseCase: context.read())),
+                    DailyTasksViewModel(dailyTasksUseCase: context.read(), taskRepository: context.read())),
           ),
           GoRoute(
             path: Routes.importantTasks,

@@ -1,71 +1,129 @@
 import 'package:flutter/foundation.dart';
+import 'package:logging/logging.dart';
 import 'package:reefquest/utils/result.dart';
 
 import '../../../data/models/task.dart';
+import '../../../data/repositories/tasks/tasks_repository.dart';
 import '../../../data/use_cases/DailyTasksUseCase.dart';
 import '../../../utils/command.dart';
 
 class DailyTasksViewModel extends ChangeNotifier {
+  final _log = Logger('$DailyTasksViewModel');
+
   final DailyTasksUseCase _dailyTasksUseCase;
+  final TaskRepository _taskRepository;
 
-  late final Command0 load;
-
-  late Task? _importantTask;
-  late Task? _selfCareTask;
+  Map<TaskType, Task?> _taskMap = {};
+  Map<TaskType, int> _rollMap = {};
   late int? _importantRollCount;
+
   late int? _selfCareRollCount;
 
-  Task? get importantTask => _importantTask;
+  Map<TaskType, Task?> get taskMap => _taskMap;
 
-  Task? get selfCareTask => _selfCareTask;
+  Map<TaskType, int> get rollMap => _rollMap;
 
   int? get importantRollCount => _importantRollCount;
 
   int? get selfCareRollCount => _selfCareRollCount;
 
-  DailyTasksViewModel({required DailyTasksUseCase dailyTasksUseCase})
-      : _dailyTasksUseCase = dailyTasksUseCase {
+  late final Command0 load;
+  late final Command2<void, Task, Future<void> Function()> updateTask;
+
+  DailyTasksViewModel(
+      {required DailyTasksUseCase dailyTasksUseCase,
+      required TaskRepository taskRepository})
+      : _dailyTasksUseCase = dailyTasksUseCase,
+        _taskRepository = taskRepository {
     load = Command0(_load)..execute();
+    updateTask = Command2(_updateTask);
   }
 
   Future<Result> _load() async {
-    //TODO implement the method by calling the useCase
     try {
-      final importantTaskResult =
-          await _dailyTasksUseCase.getDailyImportantTask();
-      switch (importantTaskResult) {
+      for (TaskType taskType in TaskType.values) {
+        final taskResult = await _dailyTasksUseCase.getDailyTask(taskType);
+        switch (taskResult) {
+          case Error<Task?>():
+            _log.warning(
+                'Failed to load ${taskType.name} daily task', taskResult.error);
+            return taskResult;
+          case Ok<Task?>():
+        }
+
+        _taskMap[taskType] = taskResult.value;
+
+        final rollResult = await _dailyTasksUseCase.getTaskRollCount(taskType);
+        switch (rollResult) {
+          case Error<int>():
+            _log.warning(
+                'Failed to load ${taskType.name} roll count', rollResult.error);
+            return taskResult;
+          case Ok<int>():
+        }
+
+        _rollMap[taskType] = rollResult.value;
+      }
+      return Result.ok(null);
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<Result<void>> _updateTask(
+      Task task, Future<void> Function() onAfterSuccess) async {
+    // Update the task.
+    try {
+      final taskType = task.taskType;
+      final updateResult = await _taskRepository.updateTask(task);
+      switch (updateResult) {
+        case Ok<void>():
+          _log.fine('Task updated successfully');
+        case Error<void>():
+          _log.warning(
+              'Failed to update task : ${task.toString()}', updateResult.error);
+          return updateResult;
+      }
+
+      //Executes the method to call after success.
+      await onAfterSuccess();
+
+      final taskResult = await _dailyTasksUseCase.getDailyTask(taskType);
+      switch (taskResult) {
         case Error<Task?>():
-          return importantTaskResult;
+          _log.warning(
+              'Failed to load ${taskType.name} daily task', taskResult.error);
+          return taskResult;
         case Ok<Task?>():
       }
-      _importantTask = importantTaskResult.value;
 
-      final selfCareTaskResult =
-          await _dailyTasksUseCase.getDailySelfCareTask();
-      switch (selfCareTaskResult) {
+      _taskMap[taskType] = taskResult.value;
+
+      final rollResult = await _dailyTasksUseCase.getTaskRollCount(taskType);
+      switch (rollResult) {
+        case Error<int>():
+          _log.warning(
+              'Failed to load ${taskType.name} roll count', rollResult.error);
+          return taskResult;
+        case Ok<int>():
+      }
+
+      _rollMap[taskType] = rollResult.value;
+      return Result.ok(null);
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<Result<void>> getNewTask(TaskType taskType) async {
+    try {
+      final taskResult = await _dailyTasksUseCase.getNewDailyTask(taskType);
+      switch (taskResult) {
         case Error<Task?>():
-          return selfCareTaskResult;
+          return taskResult;
         case Ok<Task?>():
       }
-      _selfCareTask = selfCareTaskResult.value;
-
-      final importantRollResult =
-          await _dailyTasksUseCase.getImportantRollCount();
-      switch (importantRollResult) {
-        case Error<int?>():
-          return importantRollResult;
-        case Ok<int?>():
-      }
-      _importantRollCount = importantRollResult.value;
-
-      final selfCareRollResult =
-          await _dailyTasksUseCase.getSelfCareRollCount();
-      switch (selfCareRollResult) {
-        case Error<int?>():
-          return selfCareRollResult;
-        case Ok<int?>():
-      }
-      _selfCareRollCount = selfCareRollResult.value;
+      _taskMap[taskType] = taskResult.value;
       return Result.ok(null);
     } finally {
       notifyListeners();

@@ -14,14 +14,43 @@ class LocalTasksRepository extends TaskRepository {
       : _taskService = taskService,
         _dailyTaskService = dailyTaskService;
 
-  //TODO Modify this and the daily task service to refactor and use TaskType instead of code duplication.
+  @override
+  Future<Result<List<Task>>> getTasks(TaskType type, {bool? done = false}) {
+    return _taskService.getTasks(type, done: done);
+  }
 
   @override
-  Future<Result<Task?>> getDailyImportantTask() async {
+  Future<Result<void>> saveTask(Task task) {
+    return _taskService.saveTask(task);
+  }
+
+  @override
+  Future<Result<void>> updateTask(Task task) async {
+    final dailyTaskIdResult =
+        await _dailyTaskService.getTaskOfDayId(task.taskType);
+    switch (dailyTaskIdResult) {
+      case Error<int?>():
+        return dailyTaskIdResult;
+      case Ok<int?>():
+    }
+    if (dailyTaskIdResult.value != null && dailyTaskIdResult.value == task.id && task.done == true) {
+      _dailyTaskService.saveTaskOfDayId(task.taskType, null);
+    }
+    return _taskService.updateTask(task);
+  }
+
+  @override
+  Future<Result<void>> deleteTask(Task task) {
+    return _taskService.deleteTask(task);
+  }
+
+  @override
+  Future<Result<Task?>> getDailyTask(TaskType type) async {
     try {
-      final taskIdResult = await _dailyTaskService.getImportantTaskOfDayId();
+      final taskIdResult = await _dailyTaskService.getTaskOfDayId(type);
       switch (taskIdResult) {
         case Ok<int?>():
+          print('Daily ${type.name} task id : ${taskIdResult.value}');
           if (taskIdResult.value != null) {
             return _taskService.getTaskFromId(taskIdResult.value!);
           } else {
@@ -29,7 +58,7 @@ class LocalTasksRepository extends TaskRepository {
           }
         case Error<int?>():
           return Result.error(
-              Exception('Error when getting daily important task'));
+              Exception('Error when getting daily ${type.name} task'));
       }
     } on Exception catch (e) {
       return Result.error(e);
@@ -37,61 +66,32 @@ class LocalTasksRepository extends TaskRepository {
   }
 
   @override
-  Future<Result<Task?>> getDailySelfCareTask() async {
-    try {
-      final taskIdResult = await _dailyTaskService.getSelfCareTaskOfDayId();
-      switch (taskIdResult) {
-        case Ok<int?>():
-          if (taskIdResult.value != null) {
-            return _taskService.getTaskFromId(taskIdResult.value!);
-          } else {
-            return Result.ok(null);
-          }
-        case Error<int?>():
-          return Result.error(
-              Exception('Error when getting daily self care task'));
-      }
-    } on Exception catch (e) {
-      return Result.error(e);
-    }
-  }
-
-  @override
-  Future<Result<int?>> getImportantRoll() {
-    return _dailyTaskService.getImportantRollCount();
-  }
-
-  @override
-  Future<Result<int?>> getSelfCareRoll() {
-    return _dailyTaskService.getSelfCareRollCount();
-  }
-
-  @override
-  Future<Result<void>> saveDailyImportantTask(Task? task) {
+  Future<Result<void>> saveDailyTask(Task? task, TaskType type) {
     if (task != null) {
-      return _dailyTaskService.saveImportantTaskOfDayId(task.id!);
+      return _dailyTaskService.saveTaskOfDayId(task.taskType, task.id!);
     } else {
-      return _dailyTaskService.saveImportantTaskOfDayId(-1);
+      return _dailyTaskService.saveTaskOfDayId(type, null);
     }
   }
 
   @override
-  Future<Result<void>> saveDailySelfCareTask(Task? task) {
-    if (task != null) {
-      return _dailyTaskService.saveSelfCareTaskOfDayId(task.id!);
-    } else {
-      return _dailyTaskService.saveSelfCareTaskOfDayId(-1);
+  Future<Result<int>> getRoll(TaskType type) async {
+    final rollCountResult = await _dailyTaskService.getRollCount(type);
+    switch (rollCountResult) {
+      case Error<int?>():
+        return Result.error(rollCountResult.error);
+      case Ok<int?>():
+        if (rollCountResult.value != null) {
+          return Result.ok(rollCountResult.value!);
+        } else {
+          throw Exception('Roll count not set');
+        }
     }
   }
 
   @override
-  Future<Result<void>> saveImportantRoll(int count) {
-    return _dailyTaskService.saveImportantRollCount(count);
-  }
-
-  @override
-  Future<Result<void>> saveSelfCareRoll(int count) {
-    return _dailyTaskService.saveSelfCareRollCount(count);
+  Future<Result<void>> saveRoll(TaskType type, int count) {
+    return _dailyTaskService.saveRollCount(type, count);
   }
 
   @override
@@ -112,29 +112,5 @@ class LocalTasksRepository extends TaskRepository {
   @override
   Future<Result<void>> saveLastTaskResetDate(DateTime date) {
     return _dailyTaskService.saveLastTaskResetDate(date);
-  }
-
-  // ************************************
-  // NEW IMPLEMENTATIONS
-  // ************************************
-
-  @override
-  Future<Result<List<Task>>> getTasks(TaskType type, {bool? done = false}) {
-    return _taskService.getTasks(type, done: done);
-  }
-
-  @override
-  Future<Result<void>> saveTask(Task task) {
-    return _taskService.saveTask(task);
-  }
-
-  @override
-  Future<Result<void>> updateTask(Task task) {
-    return _taskService.updateTask(task);
-  }
-
-  @override
-  Future<Result<void>> deleteTask(Task task) {
-    return _taskService.deleteTask(task);
   }
 }

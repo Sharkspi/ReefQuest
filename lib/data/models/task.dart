@@ -54,17 +54,21 @@ class Task {
 }
 
 enum TaskType {
-  important('important'),
-  selfCare('selfCare');
+  important('important', 'Important'),
+  selfCare('selfCare', 'Self care');
 
-  final String name;
+  final String _name;
+  final String _label;
 
-  const TaskType(this.name);
+  String get name => _name.toLowerCase().trim();
+  String get label => _label;
+
+  const TaskType(this._name, this._label);
 
   static TaskType getTypeFromName(String name) {
     final cleanName = name.trim().toLowerCase();
     for (final TaskType type in TaskType.values) {
-      if (type.name.trim().toLowerCase() == cleanName) return type;
+      if (type.name == cleanName) return type;
     }
     throw Exception('Task type not found : $name');
   }

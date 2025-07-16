@@ -204,7 +204,7 @@ class _Task extends StatelessWidget {
 
 class _DoneIconButton extends StatefulWidget {
   const _DoneIconButton(
-      {super.key, required this.task, required this.viewModel});
+      {required this.task, required this.viewModel});
 
   final Task task;
   final TaskListViewModel viewModel;
